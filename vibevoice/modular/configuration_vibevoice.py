@@ -2,12 +2,30 @@
 
 from typing import Dict, List, Optional, Tuple
 
+import torch
 from transformers.configuration_utils import PretrainedConfig 
 from transformers.utils import logging
 
 from transformers.models.qwen2.configuration_qwen2 import Qwen2Config
 
 logger = logging.get_logger(__name__)
+
+
+def _convert_dtype_to_string(config_dict: dict) -> dict:
+    """
+    Convert torch.dtype objects to their string representation for JSON serialization.
+    
+    This fixes the "Object of type dtype is not JSON serializable" error that occurs
+    when transformers tries to log/serialize the config with torch_dtype as a torch.dtype object.
+    
+    See: https://github.com/microsoft/VibeVoice/issues/199
+    """
+    if "torch_dtype" in config_dict and config_dict["torch_dtype"] is not None:
+        dtype = config_dict["torch_dtype"]
+        if isinstance(dtype, torch.dtype):
+            # Convert torch.dtype to string (e.g., torch.bfloat16 -> "bfloat16")
+            config_dict["torch_dtype"] = str(dtype).replace("torch.", "")
+    return config_dict
 
 
 class VibeVoiceAcousticTokenizerConfig(PretrainedConfig):
@@ -240,11 +258,39 @@ class VibeVoiceConfig(PretrainedConfig):
 
         super().__init__(**kwargs)
 
+    def get_text_config(self, decoder=False):
+        """
+        Returns the text config for this model.
+        
+        vLLM uses this method to get the text configuration from multimodal models.
+        This allows vLLM to correctly determine hidden_size, num_attention_heads,
+        and other properties needed for memory profiling and model execution.
+        
+        For VibeVoice, the "text config" is the decoder_config (Qwen2Config).
+        
+        Args:
+            decoder: If True, return the decoder config (for encoder-decoder models).
+                    For VibeVoice, this is always the decoder_config.
+        
+        Returns:
+            The decoder configuration (Qwen2Config) which contains hidden_size, etc.
+        """
+        return self.decoder_config
+
+    def to_dict(self):
+        """
+        Override to_dict to handle torch.dtype serialization.
+        
+        Fixes: https://github.com/microsoft/VibeVoice/issues/199
+        """
+        output = super().to_dict()
+        return _convert_dtype_to_string(output)
+
 class VibeVoiceASRConfig(PretrainedConfig):
     model_type = "vibevoice"
     is_composition = True
     sub_configs = {
-        "acoustic_tokenizer_config": VibeVoiceAcousticTokenizerConfig,
+        "acoustic_tokenizer_config": VibeVoiceAcousticTokenizerConfig, 
         "semantic_tokenizer_config": VibeVoiceSemanticTokenizerConfig,
         "decoder_config": Qwen2Config,
     }
@@ -259,7 +305,7 @@ class VibeVoiceASRConfig(PretrainedConfig):
         "layers.*.mlp.up_proj": "colwise",
         "layers.*.mlp.down_proj": "rowwise",
     }
-
+    
     def __init__(
         self,
         acoustic_tokenizer_config=None,
@@ -269,7 +315,7 @@ class VibeVoiceASRConfig(PretrainedConfig):
     ):
 
         # kwargs["_attn_implementation"] = "flash_attention_2"
-        kwargs["_attn_implementation_autoset"] = False
+        kwargs["_attn_implementation_autoset"] = False 
 
         if acoustic_tokenizer_config is None:
             self.acoustic_tokenizer_config = self.sub_configs["acoustic_tokenizer_config"]()
@@ -308,6 +354,15 @@ class VibeVoiceASRConfig(PretrainedConfig):
 
         super().__init__(**kwargs)
 
+    def to_dict(self):
+        """
+        Override to_dict to handle torch.dtype serialization.
+        
+        Fixes: https://github.com/microsoft/VibeVoice/issues/199
+        """
+        output = super().to_dict()
+        return _convert_dtype_to_string(output)
+
     def get_text_config(self, decoder: bool = False):
         """Return the text (decoder) config for generation."""
         return self.decoder_config
@@ -321,31 +376,31 @@ class VibeVoiceASRConfig(PretrainedConfig):
     def num_attention_heads(self):
         """Return num_attention_heads from decoder config for Ulysses SP compatibility."""
         return self.decoder_config.num_attention_heads
-
+    
     @property
     def num_key_value_heads(self):
         """Return num_key_value_heads from decoder config for Ulysses SP compatibility."""
         return self.decoder_config.num_key_value_heads
-
+    
     @property
     def hidden_size(self):
         """Return hidden_size from decoder config for model compatibility."""
         return self.decoder_config.hidden_size
-
+    
     @property
     def num_hidden_layers(self):
         """Return num_hidden_layers from decoder config for Ulysses SP compatibility."""
         return self.decoder_config.num_hidden_layers
-
+    
     @property
     def head_dim(self):
         """Return head_dim from decoder config for Ulysses SP compatibility."""
         return getattr(self.decoder_config, 'head_dim', self.hidden_size // self.num_attention_heads)
-
+    
 __all__ = [
-    "VibeVoiceAcousticTokenizerConfig",
-    "VibeVoiceSemanticTokenizerConfig",
-    "VibeVoiceDiffusionHeadConfig",
+    "VibeVoiceAcousticTokenizerConfig", 
+    "VibeVoiceSemanticTokenizerConfig", 
+    "VibeVoiceDiffusionHeadConfig", 
     "VibeVoiceConfig",
     "VibeVoiceASRConfig"
 ]

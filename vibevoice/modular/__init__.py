@@ -62,11 +62,6 @@ from .streamer import (
     AsyncAudioStreamer,
 )
 
-# LoRA support
-from .lora_loading import (
-    load_lora_assets,
-)
-
 __all__ = [
     # Multi-speaker configs
     "VibeVoiceConfig",
@@ -102,6 +97,4 @@ __all__ = [
     "VibeVoiceDiffusionHead",
     "AudioStreamer",
     "AsyncAudioStreamer",
-    # LoRA
-    "load_lora_assets",
 ]

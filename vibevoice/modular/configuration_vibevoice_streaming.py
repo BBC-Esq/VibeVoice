@@ -1,30 +1,17 @@
 """ VibeVoice Streaming model configuration"""
 
-from transformers.configuration_utils import PretrainedConfig
+import torch
+from transformers.configuration_utils import PretrainedConfig 
 from transformers.utils import logging
 
 from transformers.models.qwen2.configuration_qwen2 import Qwen2Config
 
-from .configuration_vibevoice import VibeVoiceAcousticTokenizerConfig, VibeVoiceDiffusionHeadConfig
+from .configuration_vibevoice import VibeVoiceAcousticTokenizerConfig, VibeVoiceDiffusionHeadConfig, _convert_dtype_to_string
 
 logger = logging.get_logger(__name__)
 
 
 class VibeVoiceStreamingConfig(PretrainedConfig):
-    """
-    Configuration class for the VibeVoice Streaming model (0.5B).
-
-    The streaming model differs from the multi-speaker model:
-    - No semantic tokenizer (only acoustic)
-    - Split language model: lower layers for text encoding, upper layers for TTS
-    - Optimized for low-latency real-time generation
-
-    Args:
-        acoustic_tokenizer_config: Configuration for the acoustic tokenizer
-        decoder_config: Configuration for the Qwen2 language model backbone
-        diffusion_head_config: Configuration for the diffusion prediction head
-        tts_backbone_num_hidden_layers: Number of upper transformer layers used for TTS (default: 20)
-    """
     model_type = "vibevoice_streaming"
     is_composition = True
     sub_configs = {
@@ -32,6 +19,7 @@ class VibeVoiceStreamingConfig(PretrainedConfig):
         "decoder_config": Qwen2Config,
         "diffusion_head_config": VibeVoiceDiffusionHeadConfig,
     }
+    # keys_to_ignore_at_inference = ["past_key_values"]
     # Default tensor parallel plan for base model `Qwen2`
     base_model_tp_plan = {
         "layers.*.self_attn.q_proj": "colwise",
@@ -42,7 +30,7 @@ class VibeVoiceStreamingConfig(PretrainedConfig):
         "layers.*.mlp.up_proj": "colwise",
         "layers.*.mlp.down_proj": "rowwise",
     }
-
+    
     def __init__(
         self,
         acoustic_tokenizer_config=None,
@@ -52,7 +40,8 @@ class VibeVoiceStreamingConfig(PretrainedConfig):
         **kwargs
     ):
 
-        kwargs["_attn_implementation_autoset"] = False
+        # kwargs["_attn_implementation"] = "flash_attention_2"
+        kwargs["_attn_implementation_autoset"] = False 
 
         if acoustic_tokenizer_config is None:
             self.acoustic_tokenizer_config = self.sub_configs["acoustic_tokenizer_config"]()
@@ -67,6 +56,7 @@ class VibeVoiceStreamingConfig(PretrainedConfig):
             self.decoder_config = self.sub_configs["decoder_config"]()
         elif isinstance(decoder_config, dict):
             # If a dictionary is provided, instantiate the config class with it
+            # self.decoder_config = self.sub_configs["decoder_config"](**decoder_config)
             if decoder_config.get("model_type", '') == "qwen2":
                 self.decoder_config = Qwen2Config(**decoder_config)
             else:
@@ -90,6 +80,24 @@ class VibeVoiceStreamingConfig(PretrainedConfig):
         self.tts_backbone_num_hidden_layers = tts_backbone_num_hidden_layers
 
         super().__init__(**kwargs)
+
+    def get_text_config(self, decoder=False):
+        """Returns the decoder config (required for transformers >= 4.57 cache compatibility)."""
+        return self.decoder_config
+
+    @property
+    def num_hidden_layers(self):
+        """Proxy to decoder_config.num_hidden_layers (required for transformers >= 4.57)."""
+        return self.decoder_config.num_hidden_layers
+
+    def to_dict(self):
+        """
+        Override to_dict to handle torch.dtype serialization.
+        
+        Fixes: https://github.com/microsoft/VibeVoice/issues/199
+        """
+        output = super().to_dict()
+        return _convert_dtype_to_string(output)
 
 __all__ = [
     "VibeVoiceStreamingConfig"

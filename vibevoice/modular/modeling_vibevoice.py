@@ -1,3 +1,4 @@
+# copied from https://github.com/vibevoice-community/VibeVoice/blob/main/vibevoice/modular/modeling_vibevoice.py
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple, Union, Callable
 from tqdm import tqdm
