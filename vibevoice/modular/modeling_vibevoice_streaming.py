@@ -11,7 +11,8 @@ from transformers.models.auto import AutoModel, AutoModelForCausalLM
 
 from transformers.activations import ACT2FN
 from transformers.modeling_outputs import CausalLMOutput, BaseModelOutputWithPast, ModelOutput
-from .qwen2_bundled import Qwen2RMSNorm as LlamaRMSNorm, get_qwen2_model_class
+from transformers.models.llama.modeling_llama import LlamaRMSNorm
+from transformers.models.qwen2.modeling_qwen2 import Qwen2Model
 from transformers import modeling_utils
 from transformers.modeling_utils import PreTrainedModel
 from transformers.modeling_flash_attention_utils import FlashAttentionKwargs

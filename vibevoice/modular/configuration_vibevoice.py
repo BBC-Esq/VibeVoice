@@ -6,7 +6,7 @@ import torch
 from transformers.configuration_utils import PretrainedConfig 
 from transformers.utils import logging
 
-from .qwen2_bundled import Qwen2Config
+from transformers.models.qwen2.configuration_qwen2 import Qwen2Config
 
 logger = logging.get_logger(__name__)
 

@@ -4,7 +4,7 @@ import torch
 from transformers.configuration_utils import PretrainedConfig 
 from transformers.utils import logging
 
-from .qwen2_bundled import Qwen2Config
+from transformers.models.qwen2.configuration_qwen2 import Qwen2Config
 
 from .configuration_vibevoice import VibeVoiceAcousticTokenizerConfig, VibeVoiceDiffusionHeadConfig, _convert_dtype_to_string
 
