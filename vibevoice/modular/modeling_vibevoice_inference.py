@@ -6,6 +6,23 @@ import torch.nn as nn
 
 from transformers.models.auto import AutoModel, AutoModelForCausalLM
 
+
+def _get_cache_kv_pairs(past_key_values):
+    if hasattr(past_key_values, 'key_cache') and isinstance(past_key_values.key_cache, list):
+        return list(zip(past_key_values.key_cache, past_key_values.value_cache))
+    elif hasattr(past_key_values, 'layers'):
+        pairs = []
+        for layer in past_key_values.layers:
+            if hasattr(layer, 'key_cache'):
+                pairs.append((layer.key_cache, layer.value_cache))
+            elif hasattr(layer, 'keys'):
+                pairs.append((layer.keys, layer.values))
+            else:
+                break
+        return pairs
+    else:
+        return []
+
 from transformers.generation import GenerationMixin, GenerationConfig, LogitsProcessor, LogitsProcessorList, StoppingCriteriaList
 from transformers.modeling_outputs import BaseModelOutputWithPast, ModelOutput
 from transformers import modeling_utils
@@ -567,8 +584,7 @@ class VibeVoiceForConditionalGenerationInference(VibeVoicePreTrainedModel, Gener
                     negative_model_kwargs['attention_mask'][sample_idx, :] = 0
                     negative_model_kwargs['attention_mask'][sample_idx, -1] = 1
                 # update past key values
-                for layer_idx, (k_cache, v_cache) in enumerate(zip(negative_model_kwargs['past_key_values'].key_cache, 
-                                                                        negative_model_kwargs['past_key_values'].value_cache)):
+                for layer_idx, (k_cache, v_cache) in enumerate(_get_cache_kv_pairs(negative_model_kwargs['past_key_values'])):
                     # Process each non-diffusion sample
                     for sample_idx in diffusion_start_indices.tolist():
                         # Shift cache for this sample
@@ -620,8 +636,7 @@ class VibeVoiceForConditionalGenerationInference(VibeVoicePreTrainedModel, Gener
                         negative_model_kwargs['attention_mask'][sample_idx, start_idx] = 0
 
                     # 2. Update past_key_values
-                    for layer_idx, (k_cache, v_cache) in enumerate(zip(negative_model_kwargs['past_key_values'].key_cache, 
-                                                                        negative_model_kwargs['past_key_values'].value_cache)):
+                    for layer_idx, (k_cache, v_cache) in enumerate(_get_cache_kv_pairs(negative_model_kwargs['past_key_values'])):
                         # Process each non-diffusion sample
                         for sample_idx, start_idx in zip(non_diffusion_indices.tolist(), start_indices.tolist()):
                             if start_idx + 1 < k_cache.shape[2] - 1:

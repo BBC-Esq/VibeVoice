@@ -11,7 +11,7 @@ from transformers.models.auto import AutoModel, AutoModelForCausalLM
 
 from transformers.activations import ACT2FN
 from transformers.modeling_outputs import CausalLMOutput, BaseModelOutputWithPast, ModelOutput
-from transformers.models.llama.modeling_llama import LlamaRMSNorm
+from .qwen2_bundled import Qwen2RMSNorm as LlamaRMSNorm, get_qwen2_model_class
 from transformers import modeling_utils
 from transformers.modeling_utils import PreTrainedModel
 from transformers.modeling_flash_attention_utils import FlashAttentionKwargs
@@ -110,13 +110,14 @@ class VibeVoiceStreamingModel(VibeVoiceStreamingPreTrainedModel):
         lm_config = copy.deepcopy(config.decoder_config)
         lm_backbone_num_hidden_layers = getattr(lm_config, 'num_hidden_layers', 24) - config.tts_backbone_num_hidden_layers
         lm_config.num_hidden_layers = lm_backbone_num_hidden_layers
-        self.language_model = AutoModel.from_config(lm_config)
+        Qwen2Model = get_qwen2_model_class()
+        self.language_model = Qwen2Model(lm_config)
         self.language_model.norm = nn.Identity()
         
         # We only need the Transformer layers here. Note that embed_tokens in tts_language_model is unused
         tts_lm_config = copy.deepcopy(lm_config)
         tts_lm_config.num_hidden_layers = config.tts_backbone_num_hidden_layers
-        self.tts_language_model = AutoModel.from_config(tts_lm_config)
+        self.tts_language_model = Qwen2Model(tts_lm_config)
 
         # Marks the text that needs to be spoken by the TTS model.
         self.tts_input_types = nn.Embedding(num_embeddings=2, embedding_dim=config.decoder_config.hidden_size)

@@ -11,7 +11,7 @@ from transformers.models.auto import AutoModel, AutoModelForCausalLM
 
 from transformers.activations import ACT2FN
 from transformers.modeling_outputs import CausalLMOutput, BaseModelOutputWithPast, ModelOutput
-from transformers.models.llama.modeling_llama import LlamaRMSNorm
+from .qwen2_bundled import Qwen2RMSNorm as LlamaRMSNorm, get_qwen2_model_class
 from transformers import modeling_utils
 from transformers.modeling_utils import PreTrainedModel
 from transformers.modeling_flash_attention_utils import FlashAttentionKwargs
@@ -118,8 +118,9 @@ class VibeVoiceModel(VibeVoicePreTrainedModel):
             dtype = torch.float32
         
         # Initialize Qwen2 model for language modeling
-        lm_config = config.decoder_config 
-        self.language_model = AutoModel.from_config(lm_config)
+        lm_config = config.decoder_config
+        Qwen2Model = get_qwen2_model_class()
+        self.language_model = Qwen2Model(lm_config)
         
         # Initialize speech components if needed
         self.acoustic_tokenizer = AutoModel.from_config(config.acoustic_tokenizer_config).to(dtype)
