@@ -1,5 +1,11 @@
 > [!IMPORTANT]
-> This is a community-maintained fork of VibeVoice. Following the removal of the official VibeVoice repository, this fork serves to preserve the codebase and maintain accessibility for the community while also introducing additional functionality (such as unofficial training/fine-tuning implementations)
+> This is a community-maintained fork of VibeVoice. Following the removal of the official VibeVoice repository, this fork preserves the longform inference code that Microsoft has not re-released.
+
+> [!WARNING]
+> **Transformers version compatibility:**
+> - **Longform models (1.5B/7B):** Requires `transformers>=4.51.3`. Tested and working with 4.57.3.
+> - **Streaming model (0.5B):** Requires `transformers==4.51.3`. **Does NOT work with transformers 4.57+** due to breaking changes in the KV cache API. A tensor shape mismatch occurs during the windowed generation loop. This is an upstream issue — Microsoft's own `pyproject.toml` pins `transformers==4.51.3` for the streaming model.
+> - If you need both longform and streaming, you will need separate environments with different transformers versions.
 
 ## 🎙️ VibeVoice: A Frontier Long Conversational Text-to-Speech Model
 
@@ -20,7 +26,7 @@ A core innovation of VibeVoice is its use of continuous speech tokenizers (Acous
 
 The model can synthesize speech up to **90 minutes** long with up to **4 distinct speakers**, surpassing the typical 1-2 speaker limits of many prior models.
 
-Fine-tuning is now supported, which is incredibly powerful. You can adapt VibeVoice to a new language or a new voice - [try it out](https://github.com/vibevoice-community/VibeVoice/blob/main/FINETUNING.md)
+For fine-tuning support, see the [vibevoice-community fork](https://github.com/vibevoice-community/VibeVoice).
 
 ## [Examples](./EXAMPLES.md)
 
@@ -131,9 +137,9 @@ Voice presets are stored as `.pt` files in `demo/voices/streaming_model/`. These
 
 NOTE: If you get the warning `Some weights of VibeVoiceStreamingForConditionalGenerationInference were not initialized from the model checkpoint` when loading, this is expected. This is because voice cloning capabilities have been removed from the model.
 
-## [Finetuning](./FINETUNING.md)
+## Finetuning
 
-NOTE: Finetuning is still **very experimental** and not well tested yet!
+Finetuning code has been removed from this fork to simplify maintenance. For finetuning support, see the [vibevoice-community fork](https://github.com/vibevoice-community/VibeVoice) or [vibevoice-community/VibeVoice-finetuning](https://github.com/vibevoice-community/VibeVoice-finetuning).
 
 ## FAQ
 

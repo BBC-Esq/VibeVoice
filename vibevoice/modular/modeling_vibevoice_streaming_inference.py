@@ -1,3 +1,8 @@
+# NOTE: This streaming inference module requires transformers==4.51.3.
+# It is NOT compatible with transformers 4.57+ due to breaking changes in
+# the KV cache API that cause tensor shape mismatches during windowed
+# generation. See the README for details.
+
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple, Union, Callable
 from tqdm import tqdm
