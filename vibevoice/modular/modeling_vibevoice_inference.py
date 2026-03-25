@@ -116,7 +116,7 @@ class VibeVoiceForConditionalGenerationInference(VibeVoicePreTrainedModel, Gener
     def semantic_connector(self):
         return self.model.semantic_connector
         
-    def tie_weights(self):
+    def tie_weights(self, **kwargs):
         """
         Tie the weights between the input embeddings and the output embeddings.
         """
@@ -266,14 +266,23 @@ class VibeVoiceForConditionalGenerationInference(VibeVoicePreTrainedModel, Gener
                 pad_token_id = tokenizer.pad_token_id
             )
 
-        generation_config, model_kwargs = self._prepare_generation_config(
-            generation_config, 
-            True, 
-            speech_start_id=tokenizer.speech_start_id, 
-            speech_end_id=tokenizer.speech_end_id, 
-            speech_diffusion_id=tokenizer.speech_diffusion_id, 
-            **kwargs
-        )
+        try:
+            generation_config, model_kwargs = self._prepare_generation_config(
+                generation_config,
+                True,
+                speech_start_id=tokenizer.speech_start_id,
+                speech_end_id=tokenizer.speech_end_id,
+                speech_diffusion_id=tokenizer.speech_diffusion_id,
+                **kwargs
+            )
+        except TypeError:
+            generation_config, model_kwargs = self._prepare_generation_config(
+                generation_config,
+                speech_start_id=tokenizer.speech_start_id,
+                speech_end_id=tokenizer.speech_end_id,
+                speech_diffusion_id=tokenizer.speech_diffusion_id,
+                **kwargs
+            )
         generation_config.speech_start_id = tokenizer.speech_start_id
         generation_config.speech_end_id = tokenizer.speech_end_id
         generation_config.speech_diffusion_id = tokenizer.speech_diffusion_id
@@ -300,7 +309,10 @@ class VibeVoiceForConditionalGenerationInference(VibeVoicePreTrainedModel, Gener
         )
 
         max_cache_length = generation_config.max_length - 1
-        self._prepare_cache_for_generation(generation_config, model_kwargs, None, batch_size, max_cache_length)
+        try:
+            self._prepare_cache_for_generation(generation_config, model_kwargs, None, batch_size, max_cache_length)
+        except TypeError:
+            self._prepare_cache_for_generation(generation_config, model_kwargs, None, batch_size, max_cache_length, device)
         model_kwargs['cache_position'] = torch.arange(input_ids_length, device=device, dtype=torch.long)
         for k, v in model_kwargs.items():
             if isinstance(v, torch.Tensor):
@@ -712,7 +724,7 @@ class VibeVoiceForConditionalGenerationInference(VibeVoicePreTrainedModel, Gener
         return speech[: len(speech) // 2]
     
 
-AutoModelForCausalLM.register(VibeVoiceConfig, VibeVoiceForConditionalGenerationInference)
+AutoModelForCausalLM.register(VibeVoiceConfig, VibeVoiceForConditionalGenerationInference, exist_ok=True)
 
 __all__ = [
     "VibeVoiceForConditionalGenerationInference",

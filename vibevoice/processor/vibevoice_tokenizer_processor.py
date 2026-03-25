@@ -10,7 +10,10 @@ from typing import List, Optional, Union, Dict, Any
 import numpy as np
 import torch
 
-from transformers.feature_extraction_utils import FeatureExtractionMixin
+try:
+    from transformers.feature_extraction_utils import FeatureExtractionMixin
+except ImportError:
+    from transformers.processing_utils import ProcessorMixin as FeatureExtractionMixin
 from transformers.utils import logging
 
 from .audio_utils import AudioNormalizer

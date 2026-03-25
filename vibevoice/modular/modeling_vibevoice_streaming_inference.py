@@ -205,7 +205,7 @@ class VibeVoiceStreamingForConditionalGenerationInference(VibeVoiceStreamingPreT
     def acoustic_connector(self):
         return self.model.acoustic_connector
         
-    def tie_weights(self):
+    def tie_weights(self, **kwargs):
         """
         Tie the weights between the input embeddings and the output embeddings.
         """
@@ -903,7 +903,7 @@ class VibeVoiceStreamingForConditionalGenerationInference(VibeVoiceStreamingPreT
         return speech[: len(speech) // 2]
     
 
-AutoModelForCausalLM.register(VibeVoiceStreamingConfig, VibeVoiceStreamingForConditionalGenerationInference)
+AutoModelForCausalLM.register(VibeVoiceStreamingConfig, VibeVoiceStreamingForConditionalGenerationInference, exist_ok=True)
 
 __all__ = [
     "VibeVoiceStreamingForConditionalGenerationInference",

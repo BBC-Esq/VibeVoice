@@ -476,9 +476,11 @@ class VibeVoiceASRProcessor:
     def batch_decode(self, *args, **kwargs):
         """
         Decode batch of token IDs to text.
-        Forwards to tokenizer's batch_decode method.
+        Forwards to tokenizer's batch_decode or decode method.
         """
-        return self.tokenizer.batch_decode(*args, **kwargs)
+        if hasattr(self.tokenizer, 'batch_decode'):
+            return self.tokenizer.batch_decode(*args, **kwargs)
+        return self.tokenizer.decode(*args, **kwargs)
     
     def decode(self, *args, **kwargs):
         """

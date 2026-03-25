@@ -362,10 +362,11 @@ class VibeVoiceStreamingProcessor:
 
     def batch_decode(self, *args, **kwargs):
         """
-        This method forwards all its arguments to VibeVoiceTextTokenizer's [`~PreTrainedTokenizer.batch_decode`].
-        Please refer to the docstring of this method for more information.
+        This method forwards all its arguments to the tokenizer's batch_decode or decode method.
         """
-        return self.tokenizer.batch_decode(*args, **kwargs)
+        if hasattr(self.tokenizer, 'batch_decode'):
+            return self.tokenizer.batch_decode(*args, **kwargs)
+        return self.tokenizer.decode(*args, **kwargs)
 
     def decode(self, *args, **kwargs):
         """

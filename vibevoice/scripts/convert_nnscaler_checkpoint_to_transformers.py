@@ -127,7 +127,7 @@ def convert_vibevoice_nnscaler_checkpoint_to_hf(
     
     # Verify the saved model can be loaded
     logger.info("Verifying saved model...")
-    loaded_model = VibeVoiceForConditionalGeneration.from_pretrained(pytorch_dump_folder_path)
+    loaded_model = VibeVoiceForConditionalGeneration.from_pretrained(pytorch_dump_folder_path, torch_dtype=torch.float32)
     logger.info("Model successfully loaded from saved checkpoint!")
 
 def main():

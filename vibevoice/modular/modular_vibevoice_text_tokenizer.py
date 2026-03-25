@@ -4,7 +4,10 @@ from typing import List, Optional, Union
 
 from transformers.utils import logging
 from transformers.models.qwen2.tokenization_qwen2 import Qwen2Tokenizer
-from transformers.models.qwen2.tokenization_qwen2_fast import Qwen2TokenizerFast
+try:
+    from transformers.models.qwen2.tokenization_qwen2_fast import Qwen2TokenizerFast
+except (ImportError, ModuleNotFoundError):
+    Qwen2TokenizerFast = Qwen2Tokenizer
 
 logger = logging.get_logger(__name__)
 
